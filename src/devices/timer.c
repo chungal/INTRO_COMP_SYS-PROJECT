@@ -24,6 +24,9 @@ static int64_t ticks;
 /* list to keep track of sleeping threads*/
 static struct list sleeping;
 
+//lock for timer_sleep() and timer interrupt handler
+struct lock timer_lock;
+
 /* Number of loops per timer tick.
    Initialized by timer_calibrate(). */
 static unsigned loops_per_tick;
@@ -42,6 +45,7 @@ timer_init (void)
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
   list_init(&sleeping);
+  lock_init(&timer_lock);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */

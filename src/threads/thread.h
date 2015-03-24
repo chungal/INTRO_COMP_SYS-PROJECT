@@ -5,6 +5,7 @@
 #include <list.h>
 #include <stdint.h>
 #include "threads/synch.h"
+#include "threads/fixed-point.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -96,6 +97,8 @@ struct thread
 
     //added variables and structs
     int64_t alarm_ticks;		//tick alarm for thread in timer_sleep()
+    int nice;				//nice variable for advanced scheduler
+    fpt recent_cpu;			//recent cpu in fixed point notation
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
@@ -143,10 +146,20 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 //added functions
+//function to determine ascending order in 
 bool ascending_tick_order (const struct list_elem *a,
 const struct list_elem *b, void *aux UNUSED);
 
 bool descending_priority_order (const struct list_elem *a,
 const struct list_elem *b, void *aux UNUSED);
+
+//updates the recent_cpu and load_avg
+void update_recent_cpu(void);
+void calc_recent_cpu(struct thread *t, void *aux UNUSED);
+void calc_new_priority(struct thread *t, void *aux UNUSED);
+void update_priority(void);
+void update_priority(void);
+void compare_priority(void);
+
 
 #endif /* threads/thread.h */

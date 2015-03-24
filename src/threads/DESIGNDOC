@@ -21,6 +21,12 @@ FirstName LastName <email@domain.example>
 >> preparing your submission, other than the Pintos documentation, course
 >> text, lecture notes, and course staff.
 
+http://stackoverflow.com/questions/10067510/fixed-point-arithmetic-in-c-programming
+http://web.stanford.edu/class/cs140/projects/pintos/pintos_7.html#SEC133
+http://www.techonthenet.com/c_language/constants/create_define.php
+http://www.cprogramming.com/tutorial/cpreprocessor.html
+https://gcc.gnu.org/onlinedocs/cpp/
+
 			     ALARM CLOCK
 			     ===========
 
@@ -53,10 +59,12 @@ In timer_sleep()
 
 In timer interrupt handler
 -increment ticks
+-loop start
 -check if list is not empty
 -look at front of sleeping list
 -check if the front thread's alarm_ticks > ticks
 -if yes, then remove thread from sleeping list and wake it up.
+-repeat loop until all threads that need to woken up are woken up
 
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
@@ -68,6 +76,7 @@ Answer: Keeping the sleeping list sorted by alarm_ticks helps keep time spent in
 >> timer_sleep() simultaneously?
 
 Answer: disabling interrupts in the critical section of timer_sleep() prevents any race conditions from happening.
+
 >> A5: How are race conditions avoided when a timer interrupt occurs
 >> during a call to timer_sleep()?
 
@@ -78,7 +87,17 @@ Answer: same as last question. No race conditions can happen when interrupts are
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
-Answer: I considered two designs before this one. One design took advantage of an already existing function: thread_foreach and the other design had the sleeping list unsorted. After testing with printf, I saw that the timer interrupt handler was called on frequently(every tick) which makes sense since the OS would have to check frequently whether a thread should wake up. The thread_foreach would have to iterate through each thread, sleeping or not, on each timer interrupt handler call. The unsorted sleeping list would have the OS iterate through each sleeping thread on each timer interrupt call. With the list sorted in ascending order by alarm_ticks, the OS only has to look at the front of the list to see if any threads should wake up. I also thought of using semaphores to sleep and wake up a thread but then I would have to create a new semaphore in each thread which would take up memory so I decided on just using the simpler thread block and unblock.
+Answer: I considered two designs before this one. One design took advantage of an already
+existing function: thread_foreach and the other design had the sleeping list unsorted.
+After testing with printf, I saw that the timer interrupt handler was called on frequently
+(every tick) which makes sense since the OS would have to check frequently whether a thread 
+should wake up. The thread_foreach would have to iterate through each thread, sleeping or 
+not, on each timer interrupt handler call. The unsorted sleeping list would have the OS 
+iterate through each sleeping thread on each timer interrupt call. With the list sorted in 
+ascending order by alarm_ticks, the OS only has to look at the front of the list to see if 
+any threads should wake up. I also thought of using semaphores to sleep and wake up a 
+thread but then I would have to create a new semaphore in each thread which would take up
+memory so I decided on just using the simpler thread block and unblock.
 
 
 			 PRIORITY SCHEDULING
@@ -113,7 +132,12 @@ Answer: By keeping the ready list in a descending sorted order by highest priori
 >> B6: Describe a potential race in thread_set_priority() and explain
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
-Answer: A potential race condition is if while the thread_set_priority is updating the priority to set a new priority, thread_get_priority is also called to get the priority and it would be up to chance if you get the old priority or new priority. Disabling interrupts makes it impossible for the race condition to happen. Yes you could use a lock for this race condition. Set a lock that only set_priority or get_priority can use at one time.
+
+Answer: A potential race condition is if while the thread_set_priority is updating the 
+priority to set a new priority, thread_get_priority is also called to get the priority and 
+it would be up to chance if you get the old priority or new priority. Disabling interrupts 
+makes it impossible for the race condition to happen. Yes you could use a lock for this 
+race condition. Set a lock that only set_priority or get_priority can use at one time.
 
 ---- RATIONALE ----
 
@@ -129,6 +153,8 @@ Answer: A potential race condition is if while the thread_set_priority is updati
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+
+
 ---- ALGORITHMS ----
 
 >> C2: Suppose threads A, B, and C have nice values 0, 1, and 2.  Each
@@ -142,7 +168,7 @@ ticks   A   B   C   A   B   C   to run
  0     0   0   0   63  61  59     A
  4     4   0   0   62  61  59     A
  8     8   0   0   61  61  59     B
-12     8   4   0   61  60  59     A
+12     12  4   0   60  61  59     A
 16     12  4   0   60  60  59     B
 20     12  8   0   60  59  59     A
 24     16  8   0   59  59  59     C
@@ -154,8 +180,14 @@ ticks   A   B   C   A   B   C   to run
 >> in the table uncertain?  If so, what rule did you use to resolve
 >> them?  Does this match the behavior of your scheduler?
 
+ANSWER: It didn't specify what to do if two threads have the same priority. If the running
+thread and the front thread on the ready list have the same priority then keep the running
+thread going.
+
 >> C4: How is the way you divided the cost of scheduling between code
 >> inside and outside interrupt context likely to affect performance?
+
+
 
 ---- RATIONALE ----
 
@@ -164,6 +196,7 @@ ticks   A   B   C   A   B   C   to run
 >> time to work on this part of the project, how might you choose to
 >> refine or improve your design?
 
+ANSWER: 
 >> C6: The assignment explains arithmetic for fixed-point math in
 >> detail, but it leaves it open to you to implement it.  Why did you
 >> decide to implement it the way you did?  If you created an
@@ -171,6 +204,8 @@ ticks   A   B   C   A   B   C   to run
 >> type and/or a set of functions or macros to manipulate fixed-point
 >> numbers, why did you do so?  If not, why not?
 
+ANSWER: I used macros to implement the fixed point math because I didn't want to make 
+actual functions for the fixed point arithmetic. Employing a cpp file to expand the functions in an h file would have required me to change the makefile.build file and I didn't want to change the 
 			   SURVEY QUESTIONS
 			   ================
 
